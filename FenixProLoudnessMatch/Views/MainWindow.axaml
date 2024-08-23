@@ -1,0 +1,53 @@
+<Window
+    x:Class="FenixProLoudnessMatch.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:FenixProLoudnessMatch.Views"
+    xmlns:vm="using:FenixProLoudnessMatch.ViewModels"
+    Title="FenixPro Loudness Match"
+    Width="600"
+    Height="500"
+    Background="Transparent"
+    CanResize="True"
+    CornerRadius="7"
+    ExtendClientAreaToDecorationsHint="True"
+    Icon="/Assets/avalonia-logo.ico"
+    TransparencyLevelHint="AcrylicBlur"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    MaterialOpacity="0.45"
+                    TintColor="Black"
+                    TintOpacity="1" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <DockPanel HorizontalAlignment="Left" VerticalAlignment="Top">
+            <!--<Menu DockPanel.Dock="Top">
+                <MenuItem Header="_Menu">
+                    <MenuItem Header="_Open..." />
+                    <Separator />
+                    <MenuItem Header="_Exit" />
+                </MenuItem>
+                <MenuItem Header="_Options">
+                    <MenuItem Header="Copy" />
+                    <MenuItem Header="Paste" />
+                </MenuItem>
+            </Menu>-->
+        </DockPanel>
+        <Label
+            Margin="0,6,0,0"
+            HorizontalAlignment="Center"
+            IsHitTestVisible="False">
+            FenixPro Loudness Match
+        </Label>
+        <Separator Margin="10,30,10,0" VerticalAlignment="Top" />
+        <views:MainView Margin="0,35,0,0" />
+    </Panel>
+</Window>

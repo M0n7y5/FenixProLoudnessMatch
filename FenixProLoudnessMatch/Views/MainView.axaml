@@ -1,0 +1,128 @@
+<UserControl
+    x:Class="FenixProLoudnessMatch.Views.MainView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:FenixProLoudnessMatch.Lang"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:FenixProLoudnessMatch.ViewModels"
+    d:DesignHeight="500"
+    d:DesignWidth="590"
+    x:DataType="vm:MainViewModel"
+    mc:Ignorable="d">
+    <Design.DataContext>
+        <!--
+            This only sets the DataContext for the previewer in an IDE,
+            to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs)
+        -->
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+            <Label
+                HorizontalAlignment="Center"
+                Content="{x:Static lang:Resources.origFilesLabel}"
+                ToolTip.Tip="{x:Static lang:Resources.origFilesTooltip}" />
+            <StackPanel Margin="0,5" Orientation="Horizontal">
+                <TextBox
+                    Width="500"
+                    IsEnabled="{Binding !IsPathsReadOnly}"
+                    Text="{Binding OriginalPath}" />
+                <Button Command="{Binding PickOriginalFolderCommand}" IsEnabled="{Binding !IsPathsReadOnly}">...</Button>
+            </StackPanel>
+
+            <Label
+                HorizontalAlignment="Center"
+                Content="{x:Static lang:Resources.replFilesLabel}"
+                ToolTip.Tip="{x:Static lang:Resources.replFilesTooltip}" />
+            <StackPanel Margin="0,5" Orientation="Horizontal">
+                <TextBox
+                    Width="500"
+                    IsEnabled="{Binding !IsPathsReadOnly}"
+                    Text="{Binding ReplacementPath}" />
+                <Button Command="{Binding PickReplacementFolderCommand}" IsEnabled="{Binding !IsPathsReadOnly}">...</Button>
+            </StackPanel>
+            <Label
+                HorizontalAlignment="Center"
+                Content="{x:Static lang:Resources.outputFilesLabel}"
+                ToolTip.Tip="{x:Static lang:Resources.outputFilesTooltip}" />
+
+            <StackPanel Margin="0,5" Orientation="Horizontal">
+                <TextBox
+                    Width="500"
+                    IsEnabled="{Binding !IsPathsReadOnly}"
+                    Text="{Binding OutputPath}" />
+                <Button Command="{Binding PickOutputFolderCommand}" IsEnabled="{Binding !IsPathsReadOnly}">...</Button>
+            </StackPanel>
+
+            <StackPanel
+                Margin="5"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal">
+                <Button
+                    Margin="5"
+                    Command="{Binding AnalyzeOriginalCommand}"
+                    Content="{x:Static lang:Resources.analyzeOriginal}"
+                    IsEnabled="{Binding !IsPathsReadOnly}" />
+                <Button
+                    Margin="5"
+                    Command="{Binding AnalyzeReplacementCommand}"
+                    Content="{x:Static lang:Resources.analyzeReplacement}"
+                    IsEnabled="{Binding !IsPathsReadOnly}" />
+                <Button
+                    Margin="5"
+                    Command="{Binding PrintDifferencesCommand}"
+                    Content="{x:Static lang:Resources.showDiff}"
+                    IsEnabled="{Binding !IsPathsReadOnly}" />
+                <!--<Button Margin="5">FSB Info</Button>-->
+            </StackPanel>
+            <StackPanel
+                Margin="5"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal">
+                <Button
+                    Margin="5"
+                    Command="{Binding MatchLoudnessCommand}"
+                    Content="{x:Static lang:Resources.matchLoudness}"
+                    IsEnabled="{Binding !IsPathsReadOnly}" />
+                <Button
+                    Margin="5"
+                    Command="{Binding CancelOperationCommand}"
+                    Content="{x:Static lang:Resources.cancel}"
+                    IsEnabled="{Binding !IsPathsReadOnly}" />
+            </StackPanel>
+        </StackPanel>
+
+        <Border
+            Grid.Row="1"
+            BorderBrush="Gray"
+            BorderThickness="1"
+            CornerRadius="5">
+            <ScrollViewer x:Name="ConsoleScroll">
+                <StackPanel x:Name="Console" />
+            </ScrollViewer>
+        </Border>
+
+        <StackPanel Grid.Row="2">
+            <TextBlock Margin="5" Text="{Binding ProgressText}" />
+            <ProgressBar
+                Height="10"
+                Maximum="{Binding ProgressMaximum}"
+                Minimum="0"
+                ShowProgressText="False"
+                Value="{Binding ProgressValue}" />
+        </StackPanel>
+
+
+    </Grid>
+
+</UserControl>
