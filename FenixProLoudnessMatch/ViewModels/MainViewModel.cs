@@ -50,26 +50,23 @@ public class MainViewModel : ViewModelBase
 
     // ---------
 
-    [Reactive]
-    public bool IsPathsReadOnly { get; set; } = false;
+    [Reactive] public bool IsPathsReadOnly { get; set; } = false;
 
-    [Reactive]
-    public string OriginalPath { get; set; } = string.Empty;
+    [Reactive] public string OriginalPath { get; set; } = string.Empty;
 
-    [Reactive]
-    public string ReplacementPath { get; set; } = string.Empty;
+    [Reactive] public string ReplacementPath { get; set; } = string.Empty;
 
-    [Reactive]
-    public string OutputPath { get; set; } = string.Empty;
+    [Reactive] public bool MatchOriginalBitrate { get; set; } = false;
 
-    [Reactive]
-    public string ProgressText { get; set; } = Lang.Resources.progressIdle;
+    [Reactive] public bool MatchOriginalChannels { get; set; } = false;
 
-    [Reactive]
-    public int ProgressMaximum { get; set; } = 1;
+    [Reactive] public string OutputPath { get; set; } = string.Empty;
 
-    [Reactive]
-    public int ProgressValue { get; set; } = 0;
+    [Reactive] public string ProgressText { get; set; } = Lang.Resources.progressIdle;
+
+    [Reactive] public int ProgressMaximum { get; set; } = 1;
+
+    [Reactive] public int ProgressValue { get; set; } = 0;
 
     public ReactiveCommand<Unit, Unit> PickOriginalFolderCommand { get; }
     public ReactiveCommand<Unit, Unit> PickReplacementFolderCommand { get; }
@@ -84,7 +81,9 @@ public class MainViewModel : ViewModelBase
 
     private CancellationTokenSource _cts = new CancellationTokenSource();
 
-    int maxParralelism = Environment.ProcessorCount <= 4 ? 3 : Environment.ProcessorCount - 1;
+    int maxParralelism = Environment.ProcessorCount <= 4
+        ? 3
+        : Environment.ProcessorCount - 1;
 
     public class LoudnessInfo
     {
@@ -93,12 +92,32 @@ public class MainViewModel : ViewModelBase
         public string ReplacementLoudness { get; set; } = string.Empty;
 
         public string SampleRate { get; set; } = string.Empty;
+
+        public int OriginalBitRate { get; set; }
+        
+        public int OriginalChannelCount { get; set; }
+        
     }
 
     Dictionary<string, LoudnessInfo> OriginalFiles { get; } = new();
 
+    private string ffmpegPath { get; set; } = string.Empty;
+
+    private string ffprobePath { get; set; } = string.Empty;
+
     public MainViewModel()
     {
+        if (OperatingSystem.IsWindows())
+        {
+            ffprobePath = "Libs\\ffprobe.exe";
+            ffmpegPath = "Libs\\ffmpeg.exe";
+        }
+        else
+        {
+            ffprobePath = "ffprobe";
+            ffmpegPath = "ffmpeg";
+        }
+
         this.PickOriginalFolderCommand = ReactiveCommand.CreateFromTask(PickOriginalFolder);
         this.PickReplacementFolderCommand = ReactiveCommand.CreateFromTask(PickReplacementFolder);
         this.PickOutputFolderCommand = ReactiveCommand.CreateFromTask(PickOutputFolder);
@@ -109,8 +128,10 @@ public class MainViewModel : ViewModelBase
             await MatchLoudness(_cts.Token);
         });
 
-        var origPathValid = this.WhenAnyValue(x => x.OriginalPath).Select(x => Directory.Exists(x));
-        var replacementPathValid = this.WhenAnyValue(x => x.ReplacementPath, y => y.ReplacementPath)
+        var origPathValid = this.WhenAnyValue(x => x.OriginalPath)
+            .Select(x => Directory.Exists(x));
+        var replacementPathValid = this.WhenAnyValue(x => x.ReplacementPath,
+                y => y.ReplacementPath)
             .Select(x => Directory.Exists(x.Item1) && Directory.Exists(x.Item2));
 
         this.AnalyzeOriginalCommand = ReactiveCommand.CreateFromTask(
@@ -175,7 +196,8 @@ public class MainViewModel : ViewModelBase
                     new string[]
                     {
                         Resources.msgErrorTitle,
-                        string.Format(Resources.msgErrorFmt, ex.Message)
+                        string.Format(Resources.msgErrorFmt,
+                            ex.Message)
                     }
                 )
                 .ToTask();
@@ -189,7 +211,8 @@ public class MainViewModel : ViewModelBase
                         new string[]
                         {
                             Resources.msgErrorTitle,
-                            string.Format(Resources.msgErrorFmt, ex.Message)
+                            string.Format(Resources.msgErrorFmt,
+                                ex.Message)
                         }
                     )
                     .ToTask();
@@ -202,7 +225,8 @@ public class MainViewModel : ViewModelBase
                     new string[]
                     {
                         Resources.msgErrorTitle,
-                        string.Format(Resources.msgErrorFmt, ex.Message)
+                        string.Format(Resources.msgErrorFmt,
+                            ex.Message)
                     }
                 )
                 .ToTask();
@@ -217,7 +241,8 @@ public class MainViewModel : ViewModelBase
                         new string[]
                         {
                             Resources.msgErrorTitle,
-                            string.Format(Resources.msgErrorFmt, ex.Message)
+                            string.Format(Resources.msgErrorFmt,
+                                ex.Message)
                         }
                     )
                     .ToTask();
@@ -227,7 +252,8 @@ public class MainViewModel : ViewModelBase
 
     async Task PickOriginalFolder()
     {
-        var path = await PickAFolder.Handle(Resources.origFolderDialogPickup).ToTask();
+        var path = await PickAFolder.Handle(Resources.origFolderDialogPickup)
+            .ToTask();
 
         if (path! == string.Empty)
             return;
@@ -237,7 +263,8 @@ public class MainViewModel : ViewModelBase
 
     async Task PickReplacementFolder()
     {
-        var path = await PickAFolder.Handle(Resources.replFolderDialogPickup).ToTask();
+        var path = await PickAFolder.Handle(Resources.replFolderDialogPickup)
+            .ToTask();
 
         if (path! == string.Empty)
             return;
@@ -247,7 +274,8 @@ public class MainViewModel : ViewModelBase
 
     async Task PickOutputFolder()
     {
-        var path = await PickAFolder.Handle(Resources.outputFolderDialogPickup).ToTask();
+        var path = await PickAFolder.Handle(Resources.outputFolderDialogPickup)
+            .ToTask();
 
         if (path! == string.Empty)
             return;
@@ -258,7 +286,7 @@ public class MainViewModel : ViewModelBase
     async Task GetOriginalSampleRate(CancellationToken ct = default)
     {
         await AddConsoleLine
-            .Handle($"Getting Samplerate from Orignal {OriginalFiles.Count} files")
+            .Handle($"Getting SampleRate, BitRate and Channels from Original {OriginalFiles.Count} files")
             .ToTask();
         await Parallel.ForEachAsync(
             OriginalFiles,
@@ -267,11 +295,12 @@ public class MainViewModel : ViewModelBase
                 MaxDegreeOfParallelism = maxParralelism,
                 CancellationToken = ct
             },
-            async (item, ct) =>
+            async (item,
+                ct) =>
             {
                 //TODO: Handle errors
                 var (_, stdOut, stdError) = ProcessX.GetDualAsyncEnumerable(
-                    $"Libs\\ffprobe.exe -v quiet -print_format json -show_format -show_streams \"{Path.Combine(OriginalPath, item.Key)}\""
+                    $"{ffprobePath} -v quiet -print_format json -show_format -show_streams \"{Path.Combine(OriginalPath, item.Key)}\""
                 );
 
                 StringBuilder sb = new StringBuilder();
@@ -290,24 +319,32 @@ public class MainViewModel : ViewModelBase
                     // fully wait for process to finish
                     await stdError.ToTask();
 
-                    var sr = output.Streams.FirstOrDefault(x => x.CodecType == "audio")?.SampleRate;
+                    var stream = output.Streams.FirstOrDefault(x => x.CodecType == "audio");
 
-                    if (sr == null)
+                    if (stream == null)
                     {
                         throw new Exception("No audio stream found!");
                     }
 
-                    OriginalFiles[item.Key].SampleRate = sr.ToString();
-                    await AddConsoleLine.Handle($"{item.Key}: {sr} Hz").ToTask();
+                    var itemContent = OriginalFiles[item.Key];
+
+                    itemContent.SampleRate = stream.SampleRate;
+                    itemContent.OriginalBitRate = int.Parse(stream.BitRate);
+                    itemContent.OriginalChannelCount = stream.Channels;
+                    
+                    await AddConsoleLine.Handle($"{item.Key}: {stream.SampleRate} Hz, {stream.BitRate} Bps, {stream.Channels} Channels")
+                        .ToTask();
                 }
                 catch (Exception ex)
                 {
-                    await AddConsoleLine.Handle($"Error: {ex.Message}").ToTask();
+                    await AddConsoleLine.Handle($"Error: {ex.Message}")
+                        .ToTask();
                 }
             }
         );
 
-        await AddConsoleLine.Handle($"Done!").ToTask();
+        await AddConsoleLine.Handle($"Done!")
+            .ToTask();
     }
 
     async Task AnalyzeOriginalFolder(CancellationToken ct = default)
@@ -316,7 +353,8 @@ public class MainViewModel : ViewModelBase
         //{
         await GetOriginalSampleRate(ct);
 
-        await AddConsoleLine.Handle($"Analyzing Orignal {OriginalFiles.Count} files").ToTask();
+        await AddConsoleLine.Handle($"Analyzing Orignal {OriginalFiles.Count} files")
+            .ToTask();
 
         await Parallel.ForEachAsync(
             OriginalFiles,
@@ -325,13 +363,14 @@ public class MainViewModel : ViewModelBase
                 MaxDegreeOfParallelism = maxParralelism,
                 CancellationToken = ct
             },
-            async (item, ct) =>
+            async (item,
+                ct) =>
             {
                 ct.ThrowIfCancellationRequested();
 
                 //TODO: Handle errors
                 var (p, stdOut, stdError) = ProcessX.GetDualAsyncEnumerable(
-                    $"Libs\\ffmpeg.exe -hide_banner -nostats -i \"{Path.Combine(OriginalPath, item.Key)}\" -af loudnorm=print_format=json -f null -"
+                    $"{ffmpegPath} -hide_banner -nostats -i \"{Path.Combine(OriginalPath, item.Key)}\" -af loudnorm=print_format=json -f null -"
                 );
 
                 ct.ThrowIfCancellationRequested();
@@ -376,7 +415,8 @@ public class MainViewModel : ViewModelBase
                 }
                 catch (Exception ex)
                 {
-                    await AddConsoleLine.Handle($"Error: {ex.Message}").ToTask();
+                    await AddConsoleLine.Handle($"Error: {ex.Message}")
+                        .ToTask();
                 }
             }
         );
@@ -387,12 +427,14 @@ public class MainViewModel : ViewModelBase
         //    throw;
         //}
 
-        await AddConsoleLine.Handle($"Done!").ToTask();
+        await AddConsoleLine.Handle($"Done!")
+            .ToTask();
     }
 
     async Task AnalyzeReplacementFolder(CancellationToken ct = default)
     {
-        await AddConsoleLine.Handle($"Analyzing Replacement {OriginalFiles.Count} files").ToTask();
+        await AddConsoleLine.Handle($"Analyzing Replacement {OriginalFiles.Count} files")
+            .ToTask();
 
         await Parallel.ForEachAsync(
             OriginalFiles,
@@ -401,12 +443,13 @@ public class MainViewModel : ViewModelBase
                 MaxDegreeOfParallelism = maxParralelism,
                 CancellationToken = ct
             },
-            async (item, ct) =>
+            async (item,
+                ct) =>
             {
                 ct.ThrowIfCancellationRequested();
                 //TODO: Handle errors
                 var (_, stdOut, stdError) = ProcessX.GetDualAsyncEnumerable(
-                    $"Libs\\ffmpeg.exe -hide_banner -nostats -i \"{Path.Combine(ReplacementPath, item.Key)}\" -af loudnorm=print_format=json -f null -"
+                    $"{ffmpegPath} -hide_banner -nostats -i \"{Path.Combine(ReplacementPath, item.Key)}\" -af loudnorm=print_format=json -f null -"
                 );
 
                 StringBuilder sb = new StringBuilder();
@@ -440,7 +483,8 @@ public class MainViewModel : ViewModelBase
                 // fully wait for process to finish
                 await stdError.ToTask();
 
-                if (OriginalFiles.TryGetValue(item.Key, out var info))
+                if (OriginalFiles.TryGetValue(item.Key,
+                        out var info))
                 {
                     info.ReplacementLoudness = output.InputI;
                     await AddConsoleLine
@@ -449,27 +493,33 @@ public class MainViewModel : ViewModelBase
                 }
                 else
                 {
-                    await AddConsoleLine.Handle($"MISSING: {item.Key}!").ToTask();
+                    await AddConsoleLine.Handle($"MISSING: {item.Key}!")
+                        .ToTask();
                 }
             }
         );
 
-        await AddConsoleLine.Handle($"Done!").ToTask();
+        await AddConsoleLine.Handle($"Done!")
+            .ToTask();
     }
 
     async Task PrintDifferences()
     {
-        await AddConsoleLine.Handle($"").ToTask();
-        await AddConsoleLine.Handle($"Printing Differences").ToTask();
+        await AddConsoleLine.Handle($"")
+            .ToTask();
+        await AddConsoleLine.Handle($"Printing Differences")
+            .ToTask();
 
         foreach (var f in OriginalFiles)
         {
             var original = double.Parse(
-                f.Value.OriginalLoudness.Replace(',', '.'),
+                f.Value.OriginalLoudness.Replace(',',
+                    '.'),
                 CultureInfo.InvariantCulture
             );
             var replacement = double.Parse(
-                f.Value.ReplacementLoudness.Replace(',', '.'),
+                f.Value.ReplacementLoudness.Replace(',',
+                    '.'),
                 CultureInfo.InvariantCulture
             );
             var originalAbs = Math.Abs(original);
@@ -495,7 +545,8 @@ public class MainViewModel : ViewModelBase
         {
             var filename = Path.GetFileName(fs);
 
-            OriginalFiles.Add(filename, new());
+            OriginalFiles.Add(filename,
+                new());
         }
     }
 
@@ -506,9 +557,9 @@ public class MainViewModel : ViewModelBase
         try
         {
             if (
-                string.IsNullOrWhiteSpace(OriginalPath)
-                || string.IsNullOrWhiteSpace(ReplacementPath)
-                || string.IsNullOrWhiteSpace(OutputPath)
+                string.IsNullOrWhiteSpace(OriginalPath) ||
+                string.IsNullOrWhiteSpace(ReplacementPath) ||
+                string.IsNullOrWhiteSpace(OutputPath)
             )
                 throw new Exception("Paths can't be empty!");
 
@@ -539,7 +590,8 @@ public class MainViewModel : ViewModelBase
 
             OriginalFiles.Clear();
 
-            Directory.Delete(OutputPath, true);
+            Directory.Delete(OutputPath,
+                true);
 
             Directory.CreateDirectory(OutputPath);
 
@@ -547,7 +599,9 @@ public class MainViewModel : ViewModelBase
 
             foreach (var item in OriginalFiles.Keys)
             {
-                if (File.Exists(Path.Combine(ReplacementPath, item)) == false)
+                if (File.Exists(Path.Combine(ReplacementPath,
+                        item)) ==
+                    false)
                 {
                     throw new Exception(
                         $"Files don't match! File {item} doesn't exist in Replacement Folder!"
@@ -562,7 +616,8 @@ public class MainViewModel : ViewModelBase
             await PrintDifferences();
 
             // matching the loudness
-            await AddConsoleLine.Handle($"Mathing the loudness ...").ToTask();
+            await AddConsoleLine.Handle($"Mathing the loudness ...")
+                .ToTask();
             await Parallel.ForEachAsync(
                 OriginalFiles,
                 new ParallelOptions()
@@ -570,24 +625,49 @@ public class MainViewModel : ViewModelBase
                     MaxDegreeOfParallelism = maxParralelism,
                     CancellationToken = ct
                 },
-                async (item, ct) =>
+                async (item,
+                    ct) =>
                 {
                     ct.ThrowIfCancellationRequested();
                     //TODO: Handle errors
                     // -i track246.wav -af loudnorm=I=-28.4 track246_new.wav
+                    
+                    StringBuilder sb = new StringBuilder();
+
+                    sb.Append(
+                        $"{ffmpegPath} -hide_banner -nostats -i \"{Path.Combine(ReplacementPath, item.Key)}\" -ar {item.Value.SampleRate} -af loudnorm=I={item.Value.OriginalLoudness} ");
+
+                    var isWav = item.Key.EndsWith(".wav", true, CultureInfo.InvariantCulture);
+                    
+                    if (!isWav && MatchOriginalBitrate)
+                    {
+                        sb.Append($" -b:a {item.Value.OriginalBitRate} -write_xing 0 ");
+                    }
+
+                    if (MatchOriginalChannels)
+                    {
+                        sb.Append($" -ac {item.Value.OriginalChannelCount} ");
+                    }
+                    
+                    sb.Append($"\"{Path.Combine(OutputPath, item.Key)}\"");
+
+                    var cmd = sb.ToString();
+                    
                     var (_, stdOut, stdError) = ProcessX.GetDualAsyncEnumerable(
-                        $"Libs\\ffmpeg.exe -hide_banner -nostats -i \"{Path.Combine(ReplacementPath, item.Key)}\" -ar {item.Value.SampleRate} -af loudnorm=I={item.Value.OriginalLoudness} \"{Path.Combine(OutputPath, item.Key)}\""
+                        cmd
                     );
 
                     // fully wait for process to finish
                     await stdError.ToTask();
 
                     //OriginalFiles[item.Key].ReplacementLoudness = output.InputI;
-                    await AddConsoleLine.Handle($"{item.Key} Done!").ToTask();
+                    await AddConsoleLine.Handle($"{item.Key} Done!")
+                        .ToTask();
                 }
             );
 
-            await AddConsoleLine.Handle($"All Done!").ToTask();
+            await AddConsoleLine.Handle($"All Done!")
+                .ToTask();
         }
         finally
         {

@@ -76,10 +76,10 @@ namespace FenixProLoudnessMatch.Models
         public string? SampleFmt { get; set; }
 
         [JsonPropertyName("sample_rate")]
-        public string? SampleRate { get; set; }
+        public string SampleRate { get; set; }
 
         [JsonPropertyName("channels")]
-        public int? Channels { get; set; }
+        public int Channels { get; set; }
 
         [JsonPropertyName("bits_per_sample")]
         public int? BitsPerSample { get; set; }

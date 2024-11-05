@@ -85,10 +85,34 @@
                     IsEnabled="{Binding !IsPathsReadOnly}" />
                 <!--<Button Margin="5">FSB Info</Button>-->
             </StackPanel>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+
+                <CheckBox IsEnabled="{Binding !IsPathsReadOnly}"
+                          Content="{x:Static lang:Resources.tglMatchBitrate}" 
+                          IsChecked="{Binding MatchOriginalBitrate}"
+                          ToolTip.Tip="{x:Static lang:Resources.lblMatchBitrate}" />
+
+                <CheckBox Grid.Column="1" Grid.Row="0" IsEnabled="{Binding !IsPathsReadOnly}"
+                          IsChecked="{Binding MatchOriginalChannels}"
+                          Content="{x:Static lang:Resources.tglMatchChannels}"
+                          ToolTip.Tip="{x:Static lang:Resources.lblMatchChannels}" />
+            </Grid>
+
             <StackPanel
                 Margin="5"
                 HorizontalAlignment="Center"
                 Orientation="Horizontal">
+
                 <Button
                     Margin="5"
                     Command="{Binding MatchLoudnessCommand}"

@@ -168,7 +168,16 @@
   <data name="outputFolderDialogPickup" xml:space="preserve">
     <value>Select Output Folder:</value>
   </data>
-  <data name="String1" xml:space="preserve">
-    <value>dd</value>
+  <data name="tglMatchBitrate" xml:space="preserve">
+    <value>Match Original Bitrate</value>
+  </data>
+  <data name="lblMatchBitrate" xml:space="preserve">
+    <value>Output files will match the bitrate of the original file. (Default: 192kbps)</value>
+  </data>
+  <data name="tglMatchChannels" xml:space="preserve">
+    <value>Match Original Channels</value>
+  </data>
+  <data name="lblMatchChannels" xml:space="preserve">
+    <value>Output files will match the channel count of the original.</value>
   </data>
 </root>

@@ -168,4 +168,16 @@
   <data name="outputFolderDialogPickup" xml:space="preserve">
     <value>Vyber výstupní složku</value>
   </data>
+  <data name="tglMatchBitrate" xml:space="preserve">
+    <value>Stejný Bitrate z Originálu</value>
+  </data>
+  <data name="lblMatchBitrate" xml:space="preserve">
+    <value>Výstupní soubory budou mít ten samý bitrate jako originální soubory. (Výchozí: 192kbps)</value>
+  </data>
+  <data name="tglMatchChannels" xml:space="preserve">
+    <value>Stejný počet kanálů z Originálu</value>
+  </data>
+  <data name="lblMatchChannels" xml:space="preserve">
+    <value>Výstupní soubory budou mít ten samý počet kanálů jako originál.</value>
+  </data>
 </root>
